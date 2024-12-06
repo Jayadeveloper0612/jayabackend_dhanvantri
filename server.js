@@ -29,6 +29,15 @@ app.use("/api/v1/user", userRoutes)
 //question Routes
 import questionRoutes from "./routes/questionRoutes.js"
 app.use("/api/v1/user", questionRoutes)
+//operator Routes
+import operatorRoutes from "./routes/operatorRoutes.js"
+app.use("/api/v1/operator", operatorRoutes)
+//ambulance Routes
+import ambulanceRoutes from "./routes/ambulanceRoutes.js"
+app.use("/api/v1/ambulance", ambulanceRoutes)
+//driver Routes
+import driverRoutes from "./routes/driverRoutes.js"
+app.use("/api/v1/driver", driverRoutes)
 //sample Routes
 app.get("/", async (req, res) => {
   return res

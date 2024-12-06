@@ -1,12 +1,13 @@
 import express from "express"
 import {
-  getUserProfileController,
+  // getoperatorProfileController,
   loginController,
   logoutController,
+  // logoutController,
   registerController,
-  updateProfileController,
-} from "../controllers/userController.js"
+} from "../controllers/operatorController.js"
 import { isAuth } from "../middlewares/authMiddleware.js"
+// import { isAuth } from "../middlewares/authMiddleware.js"
 
 // router object
 const router = express.Router()
@@ -18,12 +19,9 @@ router.post("/register", registerController)
 router.post("/login", loginController)
 
 //PROFILE
-router.get("/profile", isAuth, getUserProfileController)
+// router.get("/profile", isAuth, getoperatorProfileController)
 
 // LOGOUT
 router.get("/logout", isAuth, logoutController)
-
-// UPDATE PROFILE
-router.put("/update-profile", isAuth, updateProfileController)
 
 export default router

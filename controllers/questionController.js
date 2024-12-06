@@ -1,7 +1,9 @@
 import QuestionModel from "../models/questionModel.js"
+import operatorModel from "../models/operatorModel.js"
 
-//CREATE QUESTIONS
+// CREATE QUESTIONS
 export const createQuestionController = async (req, res) => {
+  console.log("Request user:", req.user) // Debugging line
   try {
     const { questions, location } = req.body // Expecting 'questions' as an array
 
@@ -23,10 +25,56 @@ export const createQuestionController = async (req, res) => {
     // Save to the database
     const savedQuestion = await newQuestion.save()
 
+    // Find an operator with slot: 0 and update slot to 1 (only one operator)
+    const assignedOperator = await operatorModel.findOneAndUpdate(
+      { slot: 0 }, // Find operator with slot 0
+      { $set: { slot: 1, assignedAt: new Date() } }, // Update slot to 1
+      // { $set: { slot: 1, assignedAt: new Date() } }, // Update slot to 1
+      { new: true } // Return the updated document
+    )
+
+    // If an operator is found, add user data to their collection
+    if (assignedOperator) {
+      await operatorModel.findByIdAndUpdate(
+        assignedOperator._id,
+        {
+          $push: {
+            assignedUsers: { userId: req.user._id, questions, location },
+          }, // Add user data in an array format
+        },
+        { new: true }
+      )
+      // }
+      // .............................
+      setTimeout(async () => {
+        console.log("Releasing operator slot after 1 minute...")
+        try {
+          const updatedOperator = await operatorModel.findOneAndUpdate(
+            { _id: assignedOperator._id },
+            { $set: { slot: 0 } }, // Free the operator's slot only
+            { new: true }
+          )
+
+          if (updatedOperator) {
+            console.log(
+              `Operator ${updatedOperator.name} is now free but still retains patient details.`
+            )
+          } else {
+            console.log("No operator found to update.")
+          }
+        } catch (error) {
+          console.error("Error releasing operator slot:", error)
+        }
+      }, 60 * 1000) // Wait for 1 minute
+    }
+
+    // ................................
+
     res.status(201).json({
       success: true,
       message: "Question created successfully",
       data: savedQuestion,
+      operator: assignedOperator || null, // Send assigned operator data if available
     })
   } catch (err) {
     console.error("Error:", err)

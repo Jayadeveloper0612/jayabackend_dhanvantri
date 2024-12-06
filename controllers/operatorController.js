@@ -1,16 +1,24 @@
-import userModel from "../models/userModel.js"
+import operatorModel from "../models/operatorModel.js"
 
 // REGISTER
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, userName, phone, alternateContact } =
-      req.body
+    const {
+      name,
+      email,
+      password,
+      operatorName,
+      operatorRoll,
+      phone,
+      alternateContact,
+    } = req.body
     //validation
     if (
       !name ||
       !email ||
       !password ||
-      !userName ||
+      !operatorName ||
+      !operatorRoll ||
       !alternateContact ||
       !phone
     ) {
@@ -19,27 +27,29 @@ export const registerController = async (req, res) => {
         message: "Please Provide All Fields",
       })
     }
-    // check existing user
-    const existingUser = await userModel.findOne({ email })
+    // check existing operator
+    const existingOperator = await operatorModel.findOne({ email })
     // validation
-    if (existingUser) {
+    if (existingOperator) {
       return res.status(500).send({
         success: false,
         message: "email already taken",
       })
     }
-    const user = await userModel.create({
+    const operator = await operatorModel.create({
       name,
       email,
       password,
-      userName,
+      operatorName,
+      operatorRoll,
+      slot: 0, // Automatically add the slot field
       phone,
       alternateContact,
     })
     res.status(201).send({
       success: true,
-      message: "Registeration Success, Please login",
-      user,
+      message: "Registration Success, Please login",
+      operator,
     })
   } catch (error) {
     console.log(error)
@@ -62,17 +72,17 @@ export const loginController = async (req, res) => {
         message: "Please Add Email or Password",
       })
     }
-    // check user
-    const user = await userModel.findOne({ email })
-    // user validation
-    if (!user) {
+    // check operator
+    const operator = await operatorModel.findOne({ email })
+    // operator validation
+    if (!operator) {
       return res.status(404).send({
         success: false,
-        message: "User Not Found!",
+        message: "operator Not Found!",
       })
     }
     //check password decrypted
-    const isMatch = await user.comparePassword(password)
+    const isMatch = await operator.comparePassword(password)
     // validation
     if (!isMatch) {
       return res.status(500).send({
@@ -81,7 +91,7 @@ export const loginController = async (req, res) => {
       })
     }
     // token
-    const token = user.generateToken()
+    const token = operator.generateToken()
     res
       .status(200)
       .cookie("token", token, {
@@ -94,7 +104,7 @@ export const loginController = async (req, res) => {
         success: true,
         message: "Login Successfully",
         token,
-        user,
+        operator,
       })
   } catch (error) {
     console.log(error)
@@ -106,15 +116,15 @@ export const loginController = async (req, res) => {
   }
 }
 
-// GET USER PROFILE
-export const getUserProfileController = async (req, res) => {
+// GET operator PROFILE
+export const getoperatorProfileController = async (req, res) => {
   try {
-    const user = await userModel.findById(req.user._id)
-    user.password = undefined
+    const operator = await operatorModel.findById(req.operator._id)
+    operator.password = undefined
     res.status(200).send({
       success: true,
-      message: "User Profile Fetched Successfully!..",
-      user,
+      message: "operator Profile Fetched Successfully!..",
+      operator,
     })
   } catch (error) {
     console.log(error)
@@ -146,21 +156,6 @@ export const logoutController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error In Logout API",
-      error,
-    })
-  }
-}
-
-// UPDATE USER PROFILE
-export const updateProfileController = async (req, res) => {
-  try {
-    const user = await userModel.findById(req.user._id)
-    const { name, email, phone, userName, alternateContact } = req.body
-  } catch (error) {
-    console.log(error)
-    res.status(500).send({
-      success: false,
-      message: "Error In update profile API",
       error,
     })
   }
